@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Life Science &amp; Healthcare GPU Benchmark Matrix — Full Competitive + Tokenization</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f0f2f5;
+    --surface: #ffffff;
+    --surface2: #f7f8fa;
+    --surface3: #eef0f4;
+    --border: #d8dce6;
+    --border2: #c8cdd9;
+    --accent: #0077cc;
+    --accent2: #0a7c5c;
+    --warn: #d94f00;
+    --text: #111827;
+    --text2: #4b5563;
+    --text3: #9ca3af;
+    --nv: #4a8a00;
+    --h200:  #1d6ed8; --h200s:  #1d6ed8;
+    --b100:  #16a34a; --b100s:  #16a34a;
+    --b200:  #b45309; --b200s:  #b45309;
+    --b300:  #c2410c; --b300s:  #c2410c;
+    --gb200: #6d28d9; --gb200s: #6d28d9;
+    --gb300: #0077cc; --gb300s: #0077cc;
+    --amd: #b91c1c;
+    --mi300x:  #b91c1c; --mi300xs:  #b91c1c;
+    --mi350x:  #be185d; --mi350xs:  #be185d;
+    --mi355x:  #c2192e; --mi355xs:  #c2192e;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    line-height: 1.5;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: linear-gradient(rgba(0,124,92,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0,124,92,0.05) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .wrapper { position: relative; z-index: 1; max-width: 1900px; margin: 0 auto; padding: 48px 28px 64px; }
+  .header { margin-bottom: 36px; }
+  .eyebrow { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.22em; color: var(--accent2); text-transform: uppercase; margin-bottom: 10px; display: flex; align-items: center; gap: 10px; }
+  .eyebrow::before { content:''; display:inline-block; width:20px; height:1px; background:var(--accent2); }
+  h1 { font-family: 'Bebas Neue', sans-serif; font-size: clamp(32px, 4.5vw, 58px); letter-spacing: 0.04em; line-height: 1; background: linear-gradient(130deg, #111827 30%, #0a7c5c 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 10px; }
+  .subtitle { color: var(--text2); font-size: 13px; max-width: 900px; font-weight: 300; }
+  .vendor-strip { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; margin-top: 20px; }
+  .vendor-label { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; padding: 4px 10px; border-radius: 3px; font-weight: 500; }
+  .vl-nv  { background: rgba(74,138,0,0.1);   border: 1px solid rgba(74,138,0,0.35);   color: #3a6e00; }
+  .vl-amd { background: rgba(185,28,28,0.1);  border: 1px solid rgba(185,28,28,0.35);  color: #9b1c1c; }
+  .gpu-legend { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 28px; }
+  .gpu-chip { display: flex; align-items: center; gap: 7px; background: var(--surface); border: 1px solid var(--border); border-radius: 5px; padding: 5px 11px; font-family: 'DM Mono', monospace; font-size: 10px; }
+  .gpu-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .gpu-sub { color: var(--text2); font-size: 9px; margin-left: 2px; }
+  .est-badge { font-size: 8px; padding: 1px 4px; border-radius: 2px; background: rgba(217,79,0,0.08); border: 1px solid rgba(217,79,0,0.3); color:#b54200; text-transform: uppercase; letter-spacing: 0.05em; margin-left: 3px; }
+  .filters { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 24px; align-items: center; }
+  .filter-label { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text3); margin-right: 2px; }
+  .filter-btn { background: var(--surface); border: 1px solid var(--border); color: var(--text2); padding: 5px 12px; border-radius: 4px; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.05em; cursor: pointer; transition: all 0.15s; text-transform: uppercase; }
+  .filter-btn:hover, .filter-btn.active { border-color: #0a7c5c; color: #0a7c5c; background: rgba(10,124,92,0.06); }
+  .vendor-toggle { background: var(--surface); border: 1px solid var(--border); padding: 5px 12px; border-radius: 4px; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.05em; cursor: pointer; transition: all 0.15s; text-transform: uppercase; color: var(--text2); }
+  .vendor-toggle.nv-active  { border-color: #4a8a00; color: #3a6e00; background: rgba(74,138,0,0.07); }
+  .vendor-toggle.amd-active { border-color: #b91c1c; color: #9b1c1c; background: rgba(185,28,28,0.07); }
+  .divider { width: 1px; height: 20px; background: var(--border2); display: inline-block; margin: 0 4px; }
+  .matrix-container { overflow-x: auto; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 36px; }
+  table { width: 100%; border-collapse: collapse; min-width: 1700px; }
+  tr.vendor-header th { padding: 7px 6px; font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; font-weight: 500; text-align: center; border-bottom: 1px solid var(--border2); }
+  .vh-blank { background: var(--surface2); }
+  .vh-nv  { background: rgba(74,138,0,0.07); color: #3a6e00; border-left: 1px solid rgba(74,138,0,0.2); border-right: 2px solid rgba(74,138,0,0.25); }
+  .vh-amd { background: rgba(185,28,28,0.07); color: #9b1c1c; border-left: 2px solid rgba(185,28,28,0.25); }
+  tr.col-header th { padding: 9px 5px; font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text2); font-weight: 400; white-space: nowrap; background: var(--surface2); border-bottom: 2px solid var(--border2); }
+  th.meta-header { text-align: left; padding-left: 14px; }
+  th.gpu-col { text-align: center; border-left: 1px solid var(--border); min-width: 105px; }
+  th.gpu-col.h200-col  { color: var(--h200s); }
+  th.gpu-col.b100-col  { color: var(--b100s); }
+  th.gpu-col.b200-col  { color: var(--b200s); }
+  th.gpu-col.b300-col  { color: var(--b300s); }
+  th.gpu-col.gb200-col { color: var(--gb200s); }
+  th.gpu-col.gb300-col { color: var(--gb300s); border-right: 2px solid rgba(74,138,0,0.25); }
+  th.gpu-col.mi300x-col { color: var(--mi300xs); border-left: 2px solid rgba(185,28,28,0.25); }
+  th.gpu-col.mi350x-col { color: var(--mi350xs); }
+  th.gpu-col.mi355x-col { color: var(--mi355xs); }
+  tbody tr.section-header { background: var(--surface3); border-top: 2px solid var(--border2); border-bottom: 1px solid var(--border2); }
+  tbody tr.section-header td { padding: 8px 14px; font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: #0a7c5c; font-weight: 600; }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: rgba(0,124,92,0.04); }
+  tbody tr.hidden { display: none; }
+  td { padding: 10px 6px; vertical-align: middle; }
+  td.benchmark-name { font-weight: 500; color: var(--text); white-space: nowrap; padding-left: 14px; min-width: 175px; }
+  .tag { font-family: 'DM Mono', monospace; font-size: 8px; background: rgba(10,124,92,0.08); border: 1px solid rgba(10,124,92,0.28); color: #065f46; padding: 1px 5px; border-radius: 3px; margin-left: 5px; }
+  td.workload-desc { color: var(--text2); font-size: 11px; min-width: 170px; max-width: 210px; line-height: 1.4; }
+  td.metric-col { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--text2); white-space: nowrap; min-width: 90px; }
+  td.score-cell { text-align: center; border-left: 1px solid var(--border); padding: 7px 3px; min-width: 105px; }
+  td.score-cell.gb300-last { border-right: 2px solid rgba(74,138,0,0.25); }
+  td.score-cell.amd-first { border-left: 2px solid rgba(185,28,28,0.25); }
+  .score-bar-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .rating { display: inline-flex; align-items: center; padding: 2px 5px; border-radius: 3px; font-family: 'DM Mono', monospace; font-size: 8px; font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase; white-space: nowrap; }
+  .r-baseline { background: rgba(29,110,216,0.08);  border: 1px solid rgba(29,110,216,0.3);  color: #1d4ed8; }
+  .r-capable  { background: rgba(22,163,74,0.08);   border: 1px solid rgba(22,163,74,0.3);   color: #15803d; }
+  .r-strong   { background: rgba(10,124,92,0.08);   border: 1px solid rgba(10,124,92,0.3);   color: #065f46; }
+  .r-best     { background: rgba(0,119,204,0.08);   border: 1px solid rgba(0,119,204,0.3);   color: #005fa3; }
+  .r-limited  { background: rgba(217,79,0,0.08);    border: 1px solid rgba(217,79,0,0.3);    color: #b54200; }
+  .r-amd      { background: rgba(185,28,28,0.08);   border: 1px solid rgba(185,28,28,0.28);  color: #991b1b; }
+  .r-amd2     { background: rgba(190,24,93,0.08);   border: 1px solid rgba(190,24,93,0.28);  color: #9d174d; }
+  .r-amd3     { background: rgba(194,25,46,0.08);   border: 1px solid rgba(194,25,46,0.28);  color: #9f1239; }
+  .score-bar { width: 78px; height: 3px; background: #e2e6ed; border-radius: 2px; overflow: hidden; }
+  .score-fill { height: 100%; border-radius: 2px; transition: width 0.7s ease; }
+  .score-sub { font-family: 'DM Mono', monospace; font-size: 8px; color: var(--text3); }
+  .section-title { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--text3); margin-bottom: 14px; margin-top: 44px; }
+  .cards-vendor-group { margin-bottom: 28px; }
+  .cards-vendor-label { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; margin-bottom: 10px; }
+  .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px; }
+  .summary-card { background: var(--surface); border: 1px solid var(--border); border-radius: 7px; padding: 16px; position: relative; overflow: hidden; }
+  .summary-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; }
+  .card-h200::before  { background: var(--h200); }
+  .card-b100::before  { background: var(--b100); }
+  .card-b200::before  { background: var(--b200); }
+  .card-b300::before  { background: var(--b300); }
+  .card-gb200::before { background: var(--gb200); }
+  .card-gb300::before { background: var(--gb300); }
+  .card-mi300x::before { background: var(--mi300x); }
+  .card-mi350x::before { background: var(--mi350x); }
+  .card-mi355x::before { background: var(--mi355x); }
+  .card-gpu-label { font-family: 'Bebas Neue', sans-serif; font-size: 19px; letter-spacing: 0.06em; margin-bottom: 2px; }
+  .card-h200  .card-gpu-label  { color: var(--h200s); }
+  .card-b100  .card-gpu-label  { color: var(--b100s); }
+  .card-b200  .card-gpu-label  { color: var(--b200s); }
+  .card-b300  .card-gpu-label  { color: var(--b300s); }
+  .card-gb200 .card-gpu-label  { color: var(--gb200s); }
+  .card-gb300 .card-gpu-label  { color: var(--gb300s); }
+  .card-mi300x .card-gpu-label { color: var(--mi300xs); }
+  .card-mi350x .card-gpu-label { color: var(--mi350xs); }
+  .card-mi355x .card-gpu-label { color: var(--mi355xs); }
+  .card-spec { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--text2); margin-bottom: 10px; line-height: 1.5; }
+  .card-strengths { list-style: none; display: flex; flex-direction: column; gap: 4px; }
+  .card-strengths li { font-size: 11px; color: var(--text2); padding-left: 12px; position: relative; line-height: 1.4; }
+  .card-strengths li::before { content: '→'; position: absolute; left: 0; color: var(--text3); }
+  .card-verdict { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); font-size: 11px; color: var(--text2); }
+  .card-verdict strong { color: var(--text); }
+  .footnote { margin-top: 28px; padding: 14px 18px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; font-family: 'DM Mono', monospace; font-size: 9px; color: var(--text3); line-height: 1.8; }
+  .footnote strong { color: var(--text2); }
+  .reg-tag { display: inline-block; font-family: 'DM Mono', monospace; font-size: 8px; letter-spacing: 0.04em; padding: 2px 5px; border-radius: 2px; margin: 2px 2px 2px 0; text-transform: uppercase; }
+  .rt-gxp   { background: rgba(10,124,92,0.07);  border: 1px solid rgba(10,124,92,0.25);  color: #065f46; }
+  .rt-21cfr { background: rgba(109,40,217,0.07); border: 1px solid rgba(109,40,217,0.25); color: #4c1d95; }
+  .rt-hipaa { background: rgba(0,119,204,0.07);  border: 1px solid rgba(0,119,204,0.25);  color: #0c4a6e; }
+  .rt-ema   { background: rgba(161,120,0,0.07);  border: 1px solid rgba(161,120,0,0.25);  color: #78350f; }
+  .rt-fda   { background: rgba(217,79,0,0.07);   border: 1px solid rgba(217,79,0,0.25);   color: #9a3412; }
+  .rt-ich   { background: rgba(15,128,70,0.07);  border: 1px solid rgba(15,128,70,0.25);  color: #065f46; }
+  .cards-vendor-label.nv-label  { color: #3a6e00; }
+  .cards-vendor-label.amd-label { color: #9b1c1c; }
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+  <div class="header">
+    <div class="eyebrow">WWT Global Engineering — GPU Benchmark Intelligence</div>
+    <h1>Life Science &amp; Healthcare GPU Benchmark Matrix + Tokenization</h1>
+    <p class="subtitle">Full competitive landscape — NVIDIA Hopper/Blackwell (H200 · B100 · B200 · B300 · GB200 NVL72 · GB300 NVL72) vs AMD Instinct (MI300X · MI350X · MI355X) across molecular dynamics, genomics, imaging AI, drug discovery, clinical NLP and <strong>LLM tokenization &amp; throughput</strong> (prefill, decode, KV cache, context length) with GxP · 21 CFR Part 11 · HIPAA · EMA · FDA · ICH E6/E8 regulatory overlays.</p>
+  </div>
+
+  <div class="vendor-strip">
+    <span class="vendor-label vl-nv">■ NVIDIA — Hopper &amp; Blackwell</span>
+    <span class="vendor-label vl-amd">■ AMD — Instinct MI Series</span>
+  </div>
+
+  <div class="gpu-legend">
+    <div class="gpu-chip"><div class="gpu-dot" style="background:var(--h200)"></div><span>H200 SXM5</span><span class="gpu-sub">141GB HBM3e · 4.8TB/s · 989 BF16 TFLOPS · 67 FP64</span></div>
+    <div class="gpu-chip"><div class="gpu-dot" style="background:var(--b100)"></div><span>B100 SXM</span><span class="gpu-sub">192GB HBM3e · 8TB/s · 1.8 PF BF16 · 90 FP64</span></div>
+    <div class="gpu-chip"><div class="gpu-dot" style="background:var(--b200)"></div><span>B200 SXM</span><span class="gpu-sub">192GB HBM3e · 8TB/s · 2.25 PF BF16 · 112 FP64</span></div>
+    <div class="gpu-chip"><div class="gpu-dot" style="background:var(--b300)"></div><span>B300 SXM</span><span class="gpu-sub">288GB HBM3e · 16TB/s · ~2.8 PF BF16 · ~140 FP64</span><span class="est-badge">est</span></div>
+    <div class="gpu-chip"><div class="gpu-dot" style="background:var(--gb200)"></div><span>GB200 NVL72</span><span class="gpu-sub">192GB · 8TB/s · 2.5 PF BF16 (rack) · NVL72 130TB/s</span></div>
+    <div class="gpu-chip"><div class="gpu-dot" style="background:var(--gb300)"></div><span>GB300 NVL72</span><span class="gpu-sub">288GB · 16TB/s · ~4 PF BF16 (rack) · NVL72 ~200TB/s</span><span class="est-badge">est</span></div>
+    <div class="gpu-chip"><div class="gpu-dot" style="background:var(--mi300x)"></div><span>MI300X</span><span class="gpu-sub">192GB HBM3 · 5.3TB/s · 1.3 PF BF16 · 84 FP64</span></div>
+    <div class="gpu-chip"><div class="gpu-dot" style="background:var(--mi350x)"></div><span>MI350X</span><span class="gpu-sub">288GB HBM3e · ~8TB/s · ~1.8 PF BF16 · ~108 FP64</span><span class="est-badge">est</span></div>
+    <div class="gpu-chip"><div class="gpu-dot" style="background:var(--mi355x)"></div><span>MI355X</span><span class="gpu-sub">288GB HBM3e · ~8TB/s · ~2.0 PF BF16 · ~116 FP64</span><span class="est-badge">est</span></div>
+  </div>
+
+  <div class="filters">
+    <span class="filter-label">Workload:</span>
+    <button class="filter-btn active" onclick="filterRows('all',this)">All</button>
+    <button class="filter-btn" onclick="filterRows('molsim',this)">Mol. Dynamics</button>
+    <button class="filter-btn" onclick="filterRows('genomics',this)">Genomics &amp; Sequencing</button>
+    <button class="filter-btn" onclick="filterRows('imaging',this)">Medical Imaging AI</button>
+    <button class="filter-btn" onclick="filterRows('drugdisc',this)">Drug Discovery</button>
+    <button class="filter-btn" onclick="filterRows('hpc',this)">HPC / Research</button>
+    <button class="filter-btn" onclick="filterRows('tokenization',this)">Tokenization</button>
+    <span class="divider"></span>
+    <span class="filter-label">Vendor:</span>
+    <button class="vendor-toggle nv-active"  id="nvToggle"  onclick="toggleVendor('nv')">NVIDIA</button>
+    <button class="vendor-toggle amd-active" id="amdToggle" onclick="toggleVendor('amd')">AMD</button>
+  </div>
+
+  <div class="matrix-container">
+    <table id="benchmarkTable">
+      <thead>
+        <tr class="vendor-header">
+          <th class="vh-blank" colspan="3"></th>
+          <th class="vh-nv nv-col" colspan="6">NVIDIA — Hopper / Blackwell</th>
+          <th class="vh-amd amd-col" colspan="3">AMD — Instinct MI Series</th>
+        </tr>
+        <tr class="col-header">
+          <th class="meta-header">Benchmark</th>
+          <th class="meta-header">Workload</th>
+          <th class="meta-header">Metric</th>
+          <th class="gpu-col h200-col  nv-col">H200 SXM5</th>
+          <th class="gpu-col b100-col  nv-col">B100 SXM</th>
+          <th class="gpu-col b200-col  nv-col">B200 SXM</th>
+          <th class="gpu-col b300-col  nv-col">B300 SXM ⚠</th>
+          <th class="gpu-col gb200-col nv-col">GB200 NVL72</th>
+          <th class="gpu-col gb300-col nv-col">GB300 NVL72 ⚠</th>
+          <th class="gpu-col mi300x-col amd-col">MI300X</th>
+          <th class="gpu-col mi350x-col amd-col">MI350X ⚠</th>
+          <th class="gpu-col mi355x-col amd-col">MI355X ⚠</th>
+        </tr>
+      </thead>
+      <tbody>
+
+        <!-- MOLECULAR DYNAMICS -->
+        <tr class="section-header"><td colspan="12">Molecular Dynamics &amp; Structural Biology</td></tr>
+
+        <tr data-cat="molsim">
+          <td class="benchmark-name">GROMACS GPU <span class="tag">Industry</span></td>
+          <td class="workload-desc">Protein–ligand MD, force field evaluation — GxP-validated simulation pipelines for preclinical candidate screening</td>
+          <td class="metric-col">ns/day · GPU util%</td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-baseline">Baseline</span><div class="score-bar"><div class="score-fill" style="width:35%;background:var(--h200)"></div></div><span class="score-sub">~320 ns/day</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-capable">Capable</span><div class="score-bar"><div class="score-fill" style="width:50%;background:var(--b100)"></div></div><span class="score-sub">~520 ns/day</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-strong">Strong</span><div class="score-bar"><div class="score-fill" style="width:62%;background:var(--b200)"></div></div><span class="score-sub">~680 ns/day</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-strong">Strong</span><div class="score-bar"><div class="score-fill" style="width:74%;background:var(--b300)"></div></div><span class="score-sub">~900 est.</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-best">Best</span><div class="score-bar"><div class="score-fill" style="width:86%;background:var(--gb200)"></div></div><span class="score-sub">~2,400 (rack)</span></div></td>
+          <td class="score-cell nv-col gb300-last"><div class="score-bar-wrap"><span class="rating r-best">Best+</span><div class="score-bar"><div class="score-fill" style="width:97%;background:var(--gb300)"></div></div><span class="score-sub">~3,800 est.</span></div></td>
+          <td class="score-cell amd-col amd-first"><div class="score-bar-wrap"><span class="rating r-amd">Capable</span><div class="score-bar"><div class="score-fill" style="width:40%;background:var(--mi300x)"></div></div><span class="score-sub">~380 ns/day</span></div></td>
+          <td class="score-cell amd-col"><div class="score-bar-wrap"><span class="rating r-amd2">Strong</span><div class="score-bar"><div class="score-fill" style="width:56%;background:var(--mi350x)"></div></div><span class="score-sub">~580 est.</span></div></td>
+          <td class="score-cell amd-col"><div class="score-bar-wrap"><span class="rating r-amd3">Strong</span><div class="score-bar"><div class="score-fill" style="width:62%;background:var(--mi355x)"></div></div><span class="score-sub">~660 est.</span></div></td>
+        </tr>
+
+        <tr data-cat="molsim">
+          <td class="benchmark-name">NAMD / AMBER GPU</td>
+          <td class="workload-desc">All-atom biomolecular simulation — membrane proteins, ADMET profiling, ICH S7A/S7B safety pharmacology support</td>
+          <td class="metric-col">ns/day (100K atoms)</td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-baseline">Baseline</span><div class="score-bar"><div class="score-fill" style="width:34%;background:var(--h200)"></div></div><span class="score-sub">~180 ns/day</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-capable">Capable</span><div class="score-bar"><div class="score-fill" style="width:49%;background:var(--b100)"></div></div><span class="score-sub">~290 ns/day</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-strong">Strong</span><div class="score-bar"><div class="score-fill" style="width:61%;background:var(--b200)"></div></div><span class="score-sub">~370 ns/day</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-strong">Strong</span><div class="score-bar"><div class="score-fill" style="width:73%;background:var(--b300)"></div></div><span class="score-sub">~490 est.</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-best">Best</span><div class="score-bar"><div class="score-fill" style="width:85%;background:var(--gb200)"></div></div><span class="score-sub">~1,300 (rack)</span></div></td>
+          <td class="score-cell nv-col gb300-last"><div class="score-bar-wrap"><span class="rating r-best">Best+</span><div class="score-bar"><div class="score-fill" style="width:97%;background:var(--gb300)"></div></div><span class="score-sub">~2,100 est.</span></div></td>
+          <td class="score-cell amd-col amd-first"><div class="score-bar-wrap"><span class="rating r-amd">Capable</span><div class="score-bar"><div class="score-fill" style="width:39%;background:var(--mi300x)"></div></div><span class="score-sub">~210 ns/day</span></div></td>
+          <td class="score-cell amd-col"><div class="score-bar-wrap"><span class="rating r-amd2">Strong</span><div class="score-bar"><div class="score-fill" style="width:54%;background:var(--mi350x)"></div></div><span class="score-sub">~310 est.</span></div></td>
+          <td class="score-cell amd-col"><div class="score-bar-wrap"><span class="rating r-amd3">Strong</span><div class="score-bar"><div class="score-fill" style="width:60%;background:var(--mi355x)"></div></div><span class="score-sub">~355 est.</span></div></td>
+        </tr>
+
+        <tr data-cat="molsim">
+          <td class="benchmark-name">OpenMM / AlphaFold2 Structure</td>
+          <td class="workload-desc">Protein structure prediction — drug target identification, antibody engineering, EMA scientific advice dossier support</td>
+          <td class="metric-col">Sequences/day · MSec/step</td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-baseline">Baseline</span><div class="score-bar"><div class="score-fill" style="width:33%;background:var(--h200)"></div></div><span class="score-sub">Ref.</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-capable">Capable</span><div class="score-bar"><div class="score-fill" style="width:47%;background:var(--b100)"></div></div><span class="score-sub">~1.5× H200</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-strong">Strong</span><div class="score-bar"><div class="score-fill" style="width:59%;background:var(--b200)"></div></div><span class="score-sub">~1.9× H200</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-strong">Strong</span><div class="score-bar"><div class="score-fill" style="width:71%;background:var(--b300)"></div></div><span class="score-sub">~2.5× est.</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-best">Best</span><div class="score-bar"><div class="score-fill" style="width:83%;background:var(--gb200)"></div></div><span class="score-sub">~3.2× H200</span></div></td>
+          <td class="score-cell nv-col gb300-last"><div class="score-bar-wrap"><span class="rating r-best">Best+</span><div class="score-bar"><div class="score-fill" style="width:97%;background:var(--gb300)"></div></div><span class="score-sub">~5× est.</span></div></td>
+          <td class="score-cell amd-col amd-first"><div class="score-bar-wrap"><span class="rating r-amd">Capable</span><div class="score-bar"><div class="score-fill" style="width:42%;background:var(--mi300x)"></div></div><span class="score-sub">~1.3× H200</span></div></td>
+          <td class="score-cell amd-col"><div class="score-bar-wrap"><span class="rating r-amd2">Strong</span><div class="score-bar"><div class="score-fill" style="width:57%;background:var(--mi350x)"></div></div><span class="score-sub">~1.8× est.</span></div></td>
+          <td class="score-cell amd-col"><div class="score-bar-wrap"><span class="rating r-amd3">Strong</span><div class="score-bar"><div class="score-fill" style="width:61%;background:var(--mi355x)"></div></div><span class="score-sub">~1.9× est.</span></div></td>
+        </tr>
+
+        <!-- GENOMICS -->
+        <tr class="section-header"><td colspan="12">Genomics, Sequencing &amp; Bioinformatics</td></tr>
+
+        <tr data-cat="genomics">
+          <td class="benchmark-name">Parabricks / GATK GPU <span class="tag">Industry</span></td>
+          <td class="workload-desc">Whole-genome variant calling pipeline — somatic/germline variant detection, pharmacogenomics, clinical trial eligibility screening</td>
+          <td class="metric-col">WGS samples/hr · mins/sample</td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-baseline">Baseline</span><div class="score-bar"><div class="score-fill" style="width:36%;background:var(--h200)"></div></div><span class="score-sub">~3.5 WGS/hr</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-capable">Capable</span><div class="score-bar"><div class="score-fill" style="width:51%;background:var(--b100)"></div></div><span class="score-sub">~5.8 WGS/hr</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-strong">Strong</span><div class="score-bar"><div class="score-fill" style="width:63%;background:var(--b200)"></div></div><span class="score-sub">~7.5 WGS/hr</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-strong">Strong</span><div class="score-bar"><div class="score-fill" style="width:75%;background:var(--b300)"></div></div><span class="score-sub">~10 WGS/hr est.</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-best">Best</span><div class="score-bar"><div class="score-fill" style="width:88%;background:var(--gb200)"></div></div><span class="score-sub">~28 WGS/hr (rack)</span></div></td>
+          <td class="score-cell nv-col gb300-last"><div class="score-bar-wrap"><span class="rating r-best">Best+</span><div class="score-bar"><div class="score-fill" style="width:98%;background:var(--gb300)"></div></div><span class="score-sub">~45 WGS/hr est.</span></div></td>
+          <td class="score-cell amd-col amd-first"><div class="score-bar-wrap"><span class="rating r-limited">Limited</span><div class="score-bar"><div class="score-fill" style="width:24%;background:var(--warn)"></div></div><span class="score-sub">No Parabricks (ROCm only)</span></div></td>
+          <td class="score-cell amd-col"><div class="score-bar-wrap"><span class="rating r-amd2">Capable</span><div class="score-bar"><div class="score-fill" style="width:40%;background:var(--mi350x)"></div></div><span class="score-sub">ROCm-native est.</span></div></td>
+          <td class="score-cell amd-col"><div class="score-bar-wrap"><span class="rating r-amd3">Capable</span><div class="score-bar"><div class="score-fill" style="width:45%;background:var(--mi355x)"></div></div><span class="score-sub">ROCm-native est.</span></div></td>
+        </tr>
+
+        <tr data-cat="genomics">
+          <td class="benchmark-name">DeepVariant / Dorado GPU</td>
+          <td class="workload-desc">Deep learning variant calling &amp; ONT basecalling — long-read sequencing, structural variant resolution, rare disease diagnostics</td>
+          <td class="metric-col">Bases/sec · Accuracy</td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-baseline">Baseline</span><div class="score-bar"><div class="score-fill" style="width:34%;background:var(--h200)"></div></div><span class="score-sub">Ref.</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-capable">Capable</span><div class="score-bar"><div class="score-fill" style="width:48%;background:var(--b100)"></div></div><span class="score-sub">~1.5× H200</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-strong">Strong</span><div class="score-bar"><div class="score-fill" style="width:60%;background:var(--b200)"></div></div><span class="score-sub">~1.9× H200</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-strong">Strong</span><div class="score-bar"><div class="score-fill" style="width:72%;background:var(--b300)"></div></div><span class="score-sub">~2.4× est.</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-best">Best</span><div class="score-bar"><div class="score-fill" style="width:84%;background:var(--gb200)"></div></div><span class="score-sub">~3× H200</span></div></td>
+          <td class="score-cell nv-col gb300-last"><div class="score-bar-wrap"><span class="rating r-best">Best+</span><div class="score-bar"><div class="score-fill" style="width:97%;background:var(--gb300)"></div></div><span class="score-sub">~4.5× est.</span></div></td>
+          <td class="score-cell amd-col amd-first"><div class="score-bar-wrap"><span class="rating r-amd">Capable</span><div class="score-bar"><div class="score-fill" style="width:42%;background:var(--mi300x)"></div></div><span class="score-sub">~1.3× H200</span></div></td>
+          <td class="score-cell amd-col"><div class="score-bar-wrap"><span class="rating r-amd2">Strong</span><div class="score-bar"><div class="score-fill" style="width:57%;background:var(--mi350x)"></div></div><span class="score-sub">~1.8× est.</span></div></td>
+          <td class="score-cell amd-col"><div class="score-bar-wrap"><span class="rating r-amd3">Strong</span><div class="score-bar"><div class="score-fill" style="width:60%;background:var(--mi355x)"></div></div><span class="score-sub">~2.0× est.</span></div></td>
+        </tr>
+
+        <tr data-cat="genomics">
+          <td class="benchmark-name">scRNA-seq / Single-Cell AI</td>
+          <td class="workload-desc">Single-cell RNA sequencing atlas construction — cell clustering, trajectory analysis, target identification for oncology &amp; immunology programs</td>
+          <td class="metric-col">Cells/sec · Epoch time</td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-baseline">Baseline</span><div class="score-bar"><div class="score-fill" style="width:33%;background:var(--h200)"></div></div><span class="score-sub">Ref.</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-capable">Capable</span><div class="score-bar"><div class="score-fill" style="width:47%;background:var(--b100)"></div></div><span class="score-sub">~1.4× H200</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-strong">Strong</span><div class="score-bar"><div class="score-fill" style="width:59%;background:var(--b200)"></div></div><span class="score-sub">~1.8× H200</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-strong">Strong</span><div class="score-bar"><div class="score-fill" style="width:70%;background:var(--b300)"></div></div><span class="score-sub">~2.3× est.</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-best">Best</span><div class="score-bar"><div class="score-fill" style="width:82%;background:var(--gb200)"></div></div><span class="score-sub">~3× H200 (rack)</span></div></td>
+          <td class="score-cell nv-col gb300-last"><div class="score-bar-wrap"><span class="rating r-best">Best+</span><div class="score-bar"><div class="score-fill" style="width:96%;background:var(--gb300)"></div></div><span class="score-sub">~4.5× est.</span></div></td>
+          <td class="score-cell amd-col amd-first"><div class="score-bar-wrap"><span class="rating r-amd">Capable</span><div class="score-bar"><div class="score-fill" style="width:42%;background:var(--mi300x)"></div></div><span class="score-sub">~1.3× H200</span></div></td>
+          <td class="score-cell amd-col"><div class="score-bar-wrap"><span class="rating r-amd2">Strong</span><div class="score-bar"><div class="score-fill" style="width:56%;background:var(--mi350x)"></div></div><span class="score-sub">~1.7× est.</span></div></td>
+          <td class="score-cell amd-col"><div class="score-bar-wrap"><span class="rating r-amd3">Strong</span><div class="score-bar"><div class="score-fill" style="width:60%;background:var(--mi355x)"></div></div><span class="score-sub">~1.9× est.</span></div></td>
+        </tr>
+
+        <!-- MEDICAL IMAGING AI -->
+        <tr class="section-header"><td colspan="12">Medical Imaging AI &amp; Clinical Diagnostics</td></tr>
+
+        <tr data-cat="imaging">
+          <td class="benchmark-name">MLPerf Medical Imaging <span class="tag">Standard</span></td>
+          <td class="workload-desc">3D-UNet segmentation (BraTS), pathology foundation models — FDA SaMD, EU MDR regulated AI inference in radiology &amp; digital pathology</td>
+          <td class="metric-col">Volumes/s · AUC</td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-baseline">Baseline</span><div class="score-bar"><div class="score-fill" style="width:28%;background:var(--h200)"></div></div><span class="score-sub">~24 vol/s</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-capable">Capable</span><div class="score-bar"><div class="score-fill" style="width:42%;background:var(--b100)"></div></div><span class="score-sub">~40 vol/s</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-strong">Strong</span><div class="score-bar"><div class="score-fill" style="width:54%;background:var(--b200)"></div></div><span class="score-sub">~55 vol/s</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-strong">Strong</span><div class="score-bar"><div class="score-fill" style="width:65%;background:var(--b300)"></div></div><span class="score-sub">~72 vol/s est.</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-best">Best</span><div class="score-bar"><div class="score-fill" style="width:84%;background:var(--gb200)"></div></div><span class="score-sub">~220 vol/s (rack)</span></div></td>
+          <td class="score-cell nv-col gb300-last"><div class="score-bar-wrap"><span class="rating r-best">Best+</span><div class="score-bar"><div class="score-fill" style="width:97%;background:var(--gb300)"></div></div><span class="score-sub">~360 vol/s est.</span></div></td>
+          <td class="score-cell amd-col amd-first"><div class="score-bar-wrap"><span class="rating r-amd">Capable</span><div class="score-bar"><div class="score-fill" style="width:38%;background:var(--mi300x)"></div></div><span class="score-sub">~28 vol/s</span></div></td>
+          <td class="score-cell amd-col"><div class="score-bar-wrap"><span class="rating r-amd2">Strong</span><div class="score-bar"><div class="score-fill" style="width:52%;background:var(--mi350x)"></div></div><span class="score-sub">~44 vol/s est.</span></div></td>
+          <td class="score-cell amd-col"><div class="score-bar-wrap"><span class="rating r-amd3">Strong</span><div class="score-bar"><div class="score-fill" style="width:58%;background:var(--mi355x)"></div></div><span class="score-sub">~52 vol/s est.</span></div></td>
+        </tr>
+
+        <tr data-cat="imaging">
+          <td class="benchmark-name">MONAI / TorchIO Training</td>
+          <td class="workload-desc">Multi-modal imaging model training (CT, MRI, PET) — GxP-documented training pipelines, 21 CFR Part 11 audit trail, reproducible clinical AI development</td>
+          <td class="metric-col">Epochs/hr · GPU-hrs to converge</td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-baseline">Baseline</span><div class="score-bar"><div class="score-fill" style="width:33%;background:var(--h200)"></div></div><span class="score-sub">Ref.</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-capable">Capable</span><div class="score-bar"><div class="score-fill" style="width:46%;background:var(--b100)"></div></div><span class="score-sub">~1.5× H200</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-strong">Strong</span><div class="score-bar"><div class="score-fill" style="width:58%;background:var(--b200)"></div></div><span class="score-sub">~1.9× H200</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-strong">Strong</span><div class="score-bar"><div class="score-fill" style="width:70%;background:var(--b300)"></div></div><span class="score-sub">~2.4× est.</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-best">Best</span><div class="score-bar"><div class="score-fill" style="width:82%;background:var(--gb200)"></div></div><span class="score-sub">~3× H200</span></div></td>
+          <td class="score-cell nv-col gb300-last"><div class="score-bar-wrap"><span class="rating r-best">Best+</span><div class="score-bar"><div class="score-fill" style="width:96%;background:var(--gb300)"></div></div><span class="score-sub">~4.5× est.</span></div></td>
+          <td class="score-cell amd-col amd-first"><div class="score-bar-wrap"><span class="rating r-amd">Capable</span><div class="score-bar"><div class="score-fill" style="width:44%;background:var(--mi300x)"></div></div><span class="score-sub">~1.35× H200</span></div></td>
+          <td class="score-cell amd-col"><div class="score-bar-wrap"><span class="rating r-amd2">Strong</span><div class="score-bar"><div class="score-fill" style="width:57%;background:var(--mi350x)"></div></div><span class="score-sub">~1.8× est.</span></div></td>
+          <td class="score-cell amd-col"><div class="score-bar-wrap"><span class="rating r-amd3">Strong</span><div class="score-bar"><div class="score-fill" style="width:62%;background:var(--mi355x)"></div></div><span class="score-sub">~2.0× est.</span></div></td>
+        </tr>
+
+        <tr data-cat="imaging">
+          <td class="benchmark-name">Whole Slide Image (WSI) Inference</td>
+          <td class="workload-desc">Gigapixel pathology tile inference — tumour grading, HER2 scoring, PD-L1 assessment, companion diagnostic AI for oncology studies</td>
+          <td class="metric-col">Slides/hr · ms/tile</td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-baseline">Baseline</span><div class="score-bar"><div class="score-fill" style="width:30%;background:var(--h200)"></div></div><span class="score-sub">~80 slides/hr</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-capable">Capable</span><div class="score-bar"><div class="score-fill" style="width:44%;background:var(--b100)"></div></div><span class="score-sub">~130 slides/hr</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-strong">Strong</span><div class="score-bar"><div class="score-fill" style="width:56%;background:var(--b200)"></div></div><span class="score-sub">~165 slides/hr</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-strong">Strong</span><div class="score-bar"><div class="score-fill" style="width:68%;background:var(--b300)"></div></div><span class="score-sub">~220 est.</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-best">Best</span><div class="score-bar"><div class="score-fill" style="width:84%;background:var(--gb200)"></div></div><span class="score-sub">~600 (rack)</span></div></td>
+          <td class="score-cell nv-col gb300-last"><div class="score-bar-wrap"><span class="rating r-best">Best+</span><div class="score-bar"><div class="score-fill" style="width:97%;background:var(--gb300)"></div></div><span class="score-sub">~1,000 est.</span></div></td>
+          <td class="score-cell amd-col amd-first"><div class="score-bar-wrap"><span class="rating r-amd">Capable</span><div class="score-bar"><div class="score-fill" style="width:40%;background:var(--mi300x)"></div></div><span class="score-sub">~95 slides/hr</span></div></td>
+          <td class="score-cell amd-col"><div class="score-bar-wrap"><span class="rating r-amd2">Strong</span><div class="score-bar"><div class="score-fill" style="width:55%;background:var(--mi350x)"></div></div><span class="score-sub">~145 est.</span></div></td>
+          <td class="score-cell amd-col"><div class="score-bar-wrap"><span class="rating r-amd3">Strong</span><div class="score-bar"><div class="score-fill" style="width:60%;background:var(--mi355x)"></div></div><span class="score-sub">~165 est.</span></div></td>
+        </tr>
+
+        <!-- DRUG DISCOVERY -->
+        <tr class="section-header"><td colspan="12">Drug Discovery &amp; Generative AI</td></tr>
+
+        <tr data-cat="drugdisc">
+          <td class="benchmark-name">DiffDock / Vina-GPU Docking</td>
+          <td class="workload-desc">Structure-based virtual screening — lead identification, binding affinity prediction, hit-to-lead optimisation across compound libraries</td>
+          <td class="metric-col">Compounds/hr · Top-N success rate</td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-baseline">Baseline</span><div class="score-bar"><div class="score-fill" style="width:33%;background:var(--h200)"></div></div><span class="score-sub">Ref.</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-capable">Capable</span><div class="score-bar"><div class="score-fill" style="width:47%;background:var(--b100)"></div></div><span class="score-sub">~1.5× H200</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-strong">Strong</span><div class="score-bar"><div class="score-fill" style="width:59%;background:var(--b200)"></div></div><span class="score-sub">~1.9× H200</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-strong">Strong</span><div class="score-bar"><div class="score-fill" style="width:71%;background:var(--b300)"></div></div><span class="score-sub">~2.4× est.</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-best">Best</span><div class="score-bar"><div class="score-fill" style="width:83%;background:var(--gb200)"></div></div><span class="score-sub">~3× H200</span></div></td>
+          <td class="score-cell nv-col gb300-last"><div class="score-bar-wrap"><span class="rating r-best">Best+</span><div class="score-bar"><div class="score-fill" style="width:97%;background:var(--gb300)"></div></div><span class="score-sub">~4.8× est.</span></div></td>
+          <td class="score-cell amd-col amd-first"><div class="score-bar-wrap"><span class="rating r-amd">Capable</span><div class="score-bar"><div class="score-fill" style="width:42%;background:var(--mi300x)"></div></div><span class="score-sub">~1.3× H200</span></div></td>
+          <td class="score-cell amd-col"><div class="score-bar-wrap"><span class="rating r-amd2">Strong</span><div class="score-bar"><div class="score-fill" style="width:57%;background:var(--mi350x)"></div></div><span class="score-sub">~1.8× est.</span></div></td>
+          <td class="score-cell amd-col"><div class="score-bar-wrap"><span class="rating r-amd3">Strong</span><div class="score-bar"><div class="score-fill" style="width:62%;background:var(--mi355x)"></div></div><span class="score-sub">~1.9× est.</span></div></td>
+        </tr>
+
+        <tr data-cat="drugdisc">
+          <td class="benchmark-name">Generative Chemistry (MolBART / REINVENT)</td>
+          <td class="workload-desc">De novo molecule generation, scaffold hopping, ADMET property optimisation — LLM-guided molecular design for pharma R&amp;D pipelines</td>
+          <td class="metric-col">Molecules/sec · Validity%</td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-baseline">Baseline</span><div class="score-bar"><div class="score-fill" style="width:28%;background:var(--h200)"></div></div><span class="score-sub">~22k mol/s</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-capable">Capable</span><div class="score-bar"><div class="score-fill" style="width:42%;background:var(--b100)"></div></div><span class="score-sub">~38k mol/s</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-strong">Strong</span><div class="score-bar"><div class="score-fill" style="width:54%;background:var(--b200)"></div></div><span class="score-sub">~52k mol/s</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-strong">Strong</span><div class="score-bar"><div class="score-fill" style="width:66%;background:var(--b300)"></div></div><span class="score-sub">~70k est.</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-best">Best</span><div class="score-bar"><div class="score-fill" style="width:83%;background:var(--gb200)"></div></div><span class="score-sub">~200k (rack)</span></div></td>
+          <td class="score-cell nv-col gb300-last"><div class="score-bar-wrap"><span class="rating r-best">Best+</span><div class="score-bar"><div class="score-fill" style="width:97%;background:var(--gb300)"></div></div><span class="score-sub">~320k est.</span></div></td>
+          <td class="score-cell amd-col amd-first"><div class="score-bar-wrap"><span class="rating r-amd">Capable</span><div class="score-bar"><div class="score-fill" style="width:38%;background:var(--mi300x)"></div></div><span class="score-sub">~26k mol/s</span></div></td>
+          <td class="score-cell amd-col"><div class="score-bar-wrap"><span class="rating r-amd2">Strong</span><div class="score-bar"><div class="score-fill" style="width:50%;background:var(--mi350x)"></div></div><span class="score-sub">~42k est.</span></div></td>
+          <td class="score-cell amd-col"><div class="score-bar-wrap"><span class="rating r-amd3">Strong</span><div class="score-bar"><div class="score-fill" style="width:56%;background:var(--mi355x)"></div></div><span class="score-sub">~50k est.</span></div></td>
+        </tr>
+
+        <tr data-cat="drugdisc">
+          <td class="benchmark-name">ONNX RT / BioNeMo Inference</td>
+          <td class="workload-desc">Biomarker classification, trial eligibility ML, adverse event prediction — FDA SaMD regulatory environment, GxP-validated inference with reproducible scoring</td>
+          <td class="metric-col">Inferences/s · P95 lat ms</td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-strong">Strong</span><div class="score-bar"><div class="score-fill" style="width:55%;background:var(--h200)"></div></div><span class="score-sub">Ref.</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-strong">Strong</span><div class="score-bar"><div class="score-fill" style="width:64%;background:var(--b100)"></div></div><span class="score-sub">~1.3× H200</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-strong">Strong</span><div class="score-bar"><div class="score-fill" style="width:72%;background:var(--b200)"></div></div><span class="score-sub">~1.5× H200</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-best">Best</span><div class="score-bar"><div class="score-fill" style="width:82%;background:var(--b300)"></div></div><span class="score-sub">~1.9× est.</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-strong">Strong</span><div class="score-bar"><div class="score-fill" style="width:72%;background:var(--gb200)"></div></div><span class="score-sub">~1.5× H200</span></div></td>
+          <td class="score-cell nv-col gb300-last"><div class="score-bar-wrap"><span class="rating r-best">Best+</span><div class="score-bar"><div class="score-fill" style="width:94%;background:var(--gb300)"></div></div><span class="score-sub">~2.2× est.</span></div></td>
+          <td class="score-cell amd-col amd-first"><div class="score-bar-wrap"><span class="rating r-amd">Capable</span><div class="score-bar"><div class="score-fill" style="width:50%;background:var(--mi300x)"></div></div><span class="score-sub">~1.1× H200</span></div></td>
+          <td class="score-cell amd-col"><div class="score-bar-wrap"><span class="rating r-amd2">Strong</span><div class="score-bar"><div class="score-fill" style="width:64%;background:var(--mi350x)"></div></div><span class="score-sub">~1.4× est.</span></div></td>
+          <td class="score-cell amd-col"><div class="score-bar-wrap"><span class="rating r-amd3">Strong</span><div class="score-bar"><div class="score-fill" style="width:68%;background:var(--mi355x)"></div></div><span class="score-sub">~1.5× est.</span></div></td>
+        </tr>
+
+        <!-- HPC / RESEARCH -->
+        <tr class="section-header"><td colspan="12">HPC &amp; Research Computing</td></tr>
+
+        <tr data-cat="hpc">
+          <td class="benchmark-name">HPL / LINPACK <span class="tag">TOP500</span></td>
+          <td class="workload-desc">Dense FP64 FLOPS — Cryo-EM structure refinement, quantum chemistry (DFT/CCSD), Magellan-class pharma HPC (Solvency-equivalent FP64 depth)</td>
+          <td class="metric-col">TFLOPS FP64</td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-baseline">Baseline</span><div class="score-bar"><div class="score-fill" style="width:36%;background:var(--h200)"></div></div><span class="score-sub">67 TFLOPS</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-capable">Capable</span><div class="score-bar"><div class="score-fill" style="width:48%;background:var(--b100)"></div></div><span class="score-sub">90 TFLOPS</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-strong">Strong</span><div class="score-bar"><div class="score-fill" style="width:60%;background:var(--b200)"></div></div><span class="score-sub">112 TFLOPS</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-best">Best</span><div class="score-bar"><div class="score-fill" style="width:75%;background:var(--b300)"></div></div><span class="score-sub">~140 est.</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-strong">Strong</span><div class="score-bar"><div class="score-fill" style="width:60%;background:var(--gb200)"></div></div><span class="score-sub">90 TFLOPS/GPU</span></div></td>
+          <td class="score-cell nv-col gb300-last"><div class="score-bar-wrap"><span class="rating r-best">Best+</span><div class="score-bar"><div class="score-fill" style="width:96%;background:var(--gb300)"></div></div><span class="score-sub">~140 TFLOPS est.</span></div></td>
+          <td class="score-cell amd-col amd-first"><div class="score-bar-wrap"><span class="rating r-amd">Capable</span><div class="score-bar"><div class="score-fill" style="width:45%;background:var(--mi300x)"></div></div><span class="score-sub">84 TFLOPS</span></div></td>
+          <td class="score-cell amd-col"><div class="score-bar-wrap"><span class="rating r-amd2">Strong</span><div class="score-bar"><div class="score-fill" style="width:58%;background:var(--mi350x)"></div></div><span class="score-sub">~108 est.</span></div></td>
+          <td class="score-cell amd-col"><div class="score-bar-wrap"><span class="rating r-amd3">Strong</span><div class="score-bar"><div class="score-fill" style="width:62%;background:var(--mi355x)"></div></div><span class="score-sub">~116 est.</span></div></td>
+        </tr>
+
+        <tr data-cat="hpc">
+          <td class="benchmark-name">HPCG (Sparse CG)</td>
+          <td class="workload-desc">Sparse linear algebra — finite element PK/PD modelling, population pharmacokinetics (NONMEM GPU), PBPK simulation across patient cohorts</td>
+          <td class="metric-col">GFLOPS · Memory BW</td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-baseline">Baseline</span><div class="score-bar"><div class="score-fill" style="width:33%;background:var(--h200)"></div></div><span class="score-sub">Ref.</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-capable">Capable</span><div class="score-bar"><div class="score-fill" style="width:50%;background:var(--b100)"></div></div><span class="score-sub">~1.7× H200</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-strong">Strong</span><div class="score-bar"><div class="score-fill" style="width:62%;background:var(--b200)"></div></div><span class="score-sub">~2.1× H200</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-best">Best</span><div class="score-bar"><div class="score-fill" style="width:79%;background:var(--b300)"></div></div><span class="score-sub">~3× est.</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-strong">Strong</span><div class="score-bar"><div class="score-fill" style="width:62%;background:var(--gb200)"></div></div><span class="score-sub">~2.1× H200</span></div></td>
+          <td class="score-cell nv-col gb300-last"><div class="score-bar-wrap"><span class="rating r-best">Best+</span><div class="score-bar"><div class="score-fill" style="width:96%;background:var(--gb300)"></div></div><span class="score-sub">~3.5× est.</span></div></td>
+          <td class="score-cell amd-col amd-first"><div class="score-bar-wrap"><span class="rating r-amd">Capable</span><div class="score-bar"><div class="score-fill" style="width:47%;background:var(--mi300x)"></div></div><span class="score-sub">~1.6× H200</span></div></td>
+          <td class="score-cell amd-col"><div class="score-bar-wrap"><span class="rating r-amd2">Strong</span><div class="score-bar"><div class="score-fill" style="width:62%;background:var(--mi350x)"></div></div><span class="score-sub">~2.1× est.</span></div></td>
+          <td class="score-cell amd-col"><div class="score-bar-wrap"><span class="rating r-amd3">Strong</span><div class="score-bar"><div class="score-fill" style="width:66%;background:var(--mi355x)"></div></div><span class="score-sub">~2.2× est.</span></div></td>
+        </tr>
+
+        <tr data-cat="hpc">
+          <td class="benchmark-name">STREAM (Memory BW)</td>
+          <td class="workload-desc">Sustained HBM bandwidth — large omics matrix streaming, population genetics data scans, multi-modal clinical dataset loading for AI training</td>
+          <td class="metric-col">TB/s sustained</td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-baseline">Baseline</span><div class="score-bar"><div class="score-fill" style="width:30%;background:var(--h200)"></div></div><span class="score-sub">4.8 TB/s</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-capable">Capable</span><div class="score-bar"><div class="score-fill" style="width:50%;background:var(--b100)"></div></div><span class="score-sub">8.0 TB/s</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-capable">Capable</span><div class="score-bar"><div class="score-fill" style="width:50%;background:var(--b200)"></div></div><span class="score-sub">8.0 TB/s</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-best">Best</span><div class="score-bar"><div class="score-fill" style="width:100%;background:var(--b300)"></div></div><span class="score-sub">~16 TB/s</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-capable">Capable</span><div class="score-bar"><div class="score-fill" style="width:50%;background:var(--gb200)"></div></div><span class="score-sub">8 TB/s/GPU</span></div></td>
+          <td class="score-cell nv-col gb300-last"><div class="score-bar-wrap"><span class="rating r-best">Best+</span><div class="score-bar"><div class="score-fill" style="width:100%;background:var(--gb300)"></div></div><span class="score-sub">~16 TB/s/GPU</span></div></td>
+          <td class="score-cell amd-col amd-first"><div class="score-bar-wrap"><span class="rating r-amd">Capable</span><div class="score-bar"><div class="score-fill" style="width:33%;background:var(--mi300x)"></div></div><span class="score-sub">5.3 TB/s</span></div></td>
+          <td class="score-cell amd-col"><div class="score-bar-wrap"><span class="rating r-amd2">Strong</span><div class="score-bar"><div class="score-fill" style="width:50%;background:var(--mi350x)"></div></div><span class="score-sub">~8 TB/s est.</span></div></td>
+          <td class="score-cell amd-col"><div class="score-bar-wrap"><span class="rating r-amd3">Strong</span><div class="score-bar"><div class="score-fill" style="width:50%;background:var(--mi355x)"></div></div><span class="score-sub">~8 TB/s est.</span></div></td>
+        </tr>
+
+        <tr data-cat="hpc">
+          <td class="benchmark-name">GPU-Direct RDMA / FIO</td>
+          <td class="workload-desc">Storage-to-GPU bandwidth — WEKA/DDN/VAST parallel file system throughput for large-scale DICOM imaging datasets, genomic reference databases, cryo-EM maps</td>
+          <td class="metric-col">GB/s GPU-Direct</td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-strong">Strong</span><div class="score-bar"><div class="score-fill" style="width:45%;background:var(--h200)"></div></div><span class="score-sub">~100 GB/s</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-strong">Strong</span><div class="score-bar"><div class="score-fill" style="width:56%;background:var(--b100)"></div></div><span class="score-sub">~160 GB/s</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-strong">Strong</span><div class="score-bar"><div class="score-fill" style="width:64%;background:var(--b200)"></div></div><span class="score-sub">~200 GB/s</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-best">Best</span><div class="score-bar"><div class="score-fill" style="width:80%;background:var(--b300)"></div></div><span class="score-sub">~300 GB/s est.</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-strong">Strong</span><div class="score-bar"><div class="score-fill" style="width:64%;background:var(--gb200)"></div></div><span class="score-sub">~200 GB/s</span></div></td>
+          <td class="score-cell nv-col gb300-last"><div class="score-bar-wrap"><span class="rating r-best">Best+</span><div class="score-bar"><div class="score-fill" style="width:96%;background:var(--gb300)"></div></div><span class="score-sub">~400 GB/s est.</span></div></td>
+          <td class="score-cell amd-col amd-first"><div class="score-bar-wrap"><span class="rating r-amd">Capable</span><div class="score-bar"><div class="score-fill" style="width:40%;background:var(--mi300x)"></div></div><span class="score-sub">~90 GB/s</span></div></td>
+          <td class="score-cell amd-col"><div class="score-bar-wrap"><span class="rating r-amd2">Strong</span><div class="score-bar"><div class="score-fill" style="width:56%;background:var(--mi350x)"></div></div><span class="score-sub">~155 GB/s est.</span></div></td>
+          <td class="score-cell amd-col"><div class="score-bar-wrap"><span class="rating r-amd3">Strong</span><div class="score-bar"><div class="score-fill" style="width:62%;background:var(--mi355x)"></div></div><span class="score-sub">~175 GB/s est.</span></div></td>
+        </tr>
+
+        <tr data-cat="hpc">
+          <td class="benchmark-name">Interconnect BW (NVLink / Infinity Fabric)</td>
+          <td class="workload-desc">Peer-to-peer GPU fabric bandwidth — large foundation model training (ESM3, BioGPT), multi-node genomics/proteomics pipeline scale-out</td>
+          <td class="metric-col">TB/s fabric BW</td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-limited">Limited</span><div class="score-bar"><div class="score-fill" style="width:18%;background:var(--warn)"></div></div><span class="score-sub">NVL4: 900 GB/s</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-capable">Capable</span><div class="score-bar"><div class="score-fill" style="width:30%;background:var(--b100)"></div></div><span class="score-sub">NVL5: 1.8 TB/s</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-capable">Capable</span><div class="score-bar"><div class="score-fill" style="width:30%;background:var(--b200)"></div></div><span class="score-sub">NVL5: 1.8 TB/s</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-strong">Strong</span><div class="score-bar"><div class="score-fill" style="width:40%;background:var(--b300)"></div></div><span class="score-sub">NVL5+: ~2 TB/s</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-best">Best</span><div class="score-bar"><div class="score-fill" style="width:88%;background:var(--gb200)"></div></div><span class="score-sub">NVL72: 130 TB/s</span></div></td>
+          <td class="score-cell nv-col gb300-last"><div class="score-bar-wrap"><span class="rating r-best">Best+</span><div class="score-bar"><div class="score-fill" style="width:99%;background:var(--gb300)"></div></div><span class="score-sub">NVL72: ~200 TB/s</span></div></td>
+          <td class="score-cell amd-col amd-first"><div class="score-bar-wrap"><span class="rating r-limited">Limited</span><div class="score-bar"><div class="score-fill" style="width:22%;background:var(--warn)"></div></div><span class="score-sub">IF v3: 896 GB/s</span></div></td>
+          <td class="score-cell amd-col"><div class="score-bar-wrap"><span class="rating r-amd2">Strong</span><div class="score-bar"><div class="score-fill" style="width:33%;background:var(--mi350x)"></div></div><span class="score-sub">IF v4: ~1.5 TB/s</span></div></td>
+          <td class="score-cell amd-col"><div class="score-bar-wrap"><span class="rating r-amd3">Strong</span><div class="score-bar"><div class="score-fill" style="width:36%;background:var(--mi355x)"></div></div><span class="score-sub">IF v4: ~1.6 TB/s</span></div></td>
+        </tr>
+
+        <!-- TOKENIZATION -->
+        <tr class="section-header"><td colspan="12">LLM Tokenization &amp; Throughput — Clinical &amp; Scientific NLP</td></tr>
+
+        <tr data-cat="tokenization">
+          <td class="benchmark-name">Prefill Throughput <span class="tag">Tokens/sec</span></td>
+          <td class="workload-desc">Prompt ingestion rate — clinical study report (CSR) parsing, regulatory submission document analysis, ICH M4E CTD module processing at scale</td>
+          <td class="metric-col">K tokens/sec (Llama3-70B)</td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-baseline">Baseline</span><div class="score-bar"><div class="score-fill" style="width:28%;background:var(--h200)"></div></div><span class="score-sub">~18K tok/s</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-capable">Capable</span><div class="score-bar"><div class="score-fill" style="width:44%;background:var(--b100)"></div></div><span class="score-sub">~32K tok/s</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-strong">Strong</span><div class="score-bar"><div class="score-fill" style="width:58%;background:var(--b200)"></div></div><span class="score-sub">~45K tok/s</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-best">Best</span><div class="score-bar"><div class="score-fill" style="width:78%;background:var(--b300)"></div></div><span class="score-sub">~70K tok/s est.</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-best">Best</span><div class="score-bar"><div class="score-fill" style="width:88%;background:var(--gb200)"></div></div><span class="score-sub">~82K tok/s rack</span></div></td>
+          <td class="score-cell nv-col gb300-last"><div class="score-bar-wrap"><span class="rating r-best">Best+</span><div class="score-bar"><div class="score-fill" style="width:99%;background:var(--gb300)"></div></div><span class="score-sub">~130K tok/s est.</span></div></td>
+          <td class="score-cell amd-col amd-first"><div class="score-bar-wrap"><span class="rating r-amd">Capable</span><div class="score-bar"><div class="score-fill" style="width:32%;background:var(--mi300x)"></div></div><span class="score-sub">~22K tok/s</span></div></td>
+          <td class="score-cell amd-col"><div class="score-bar-wrap"><span class="rating r-amd2">Strong</span><div class="score-bar"><div class="score-fill" style="width:52%;background:var(--mi350x)"></div></div><span class="score-sub">~38K tok/s est.</span></div></td>
+          <td class="score-cell amd-col"><div class="score-bar-wrap"><span class="rating r-amd3">Strong</span><div class="score-bar"><div class="score-fill" style="width:60%;background:var(--mi355x)"></div></div><span class="score-sub">~46K tok/s est.</span></div></td>
+        </tr>
+
+        <tr data-cat="tokenization">
+          <td class="benchmark-name">Decode Throughput <span class="tag">Tokens/sec</span></td>
+          <td class="workload-desc">Autoregressive generation rate — SAE/clinical narrative drafting, MedDRA coding assistance, ICH E2B pharmacovigilance report generation, medical writing AI</td>
+          <td class="metric-col">tok/s per user (BS=1)</td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-baseline">Baseline</span><div class="score-bar"><div class="score-fill" style="width:30%;background:var(--h200)"></div></div><span class="score-sub">~55 tok/s</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-capable">Capable</span><div class="score-bar"><div class="score-fill" style="width:46%;background:var(--b100)"></div></div><span class="score-sub">~90 tok/s</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-strong">Strong</span><div class="score-bar"><div class="score-fill" style="width:60%;background:var(--b200)"></div></div><span class="score-sub">~115 tok/s</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-best">Best</span><div class="score-bar"><div class="score-fill" style="width:80%;background:var(--b300)"></div></div><span class="score-sub">~170 tok/s est.</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-best">Best</span><div class="score-bar"><div class="score-fill" style="width:88%;background:var(--gb200)"></div></div><span class="score-sub">~200 tok/s</span></div></td>
+          <td class="score-cell nv-col gb300-last"><div class="score-bar-wrap"><span class="rating r-best">Best+</span><div class="score-bar"><div class="score-fill" style="width:97%;background:var(--gb300)"></div></div><span class="score-sub">~280 tok/s est.</span></div></td>
+          <td class="score-cell amd-col amd-first"><div class="score-bar-wrap"><span class="rating r-amd">Capable</span><div class="score-bar"><div class="score-fill" style="width:38%;background:var(--mi300x)"></div></div><span class="score-sub">~70 tok/s</span></div></td>
+          <td class="score-cell amd-col"><div class="score-bar-wrap"><span class="rating r-amd2">Strong</span><div class="score-bar"><div class="score-fill" style="width:54%;background:var(--mi350x)"></div></div><span class="score-sub">~100 tok/s est.</span></div></td>
+          <td class="score-cell amd-col"><div class="score-bar-wrap"><span class="rating r-amd3">Strong</span><div class="score-bar"><div class="score-fill" style="width:62%;background:var(--mi355x)"></div></div><span class="score-sub">~118 tok/s est.</span></div></td>
+        </tr>
+
+        <tr data-cat="tokenization">
+          <td class="benchmark-name">Batched Decode (BS=128)</td>
+          <td class="workload-desc">High-concurrency generation — parallel patient safety signal processing, multi-site clinical query response, concurrent protocol deviation narrative generation</td>
+          <td class="metric-col">K tok/s total (BS=128)</td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-baseline">Baseline</span><div class="score-bar"><div class="score-fill" style="width:26%;background:var(--h200)"></div></div><span class="score-sub">~4.2K tok/s</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-capable">Capable</span><div class="score-bar"><div class="score-fill" style="width:44%;background:var(--b100)"></div></div><span class="score-sub">~7.5K tok/s</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-strong">Strong</span><div class="score-bar"><div class="score-fill" style="width:58%;background:var(--b200)"></div></div><span class="score-sub">~10K tok/s</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-best">Best</span><div class="score-bar"><div class="score-fill" style="width:80%;background:var(--b300)"></div></div><span class="score-sub">~16K tok/s est.</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-best">Best</span><div class="score-bar"><div class="score-fill" style="width:90%;background:var(--gb200)"></div></div><span class="score-sub">~19K tok/s</span></div></td>
+          <td class="score-cell nv-col gb300-last"><div class="score-bar-wrap"><span class="rating r-best">Best+</span><div class="score-bar"><div class="score-fill" style="width:99%;background:var(--gb300)"></div></div><span class="score-sub">~26K tok/s est.</span></div></td>
+          <td class="score-cell amd-col amd-first"><div class="score-bar-wrap"><span class="rating r-amd">Capable</span><div class="score-bar"><div class="score-fill" style="width:36%;background:var(--mi300x)"></div></div><span class="score-sub">~5.8K tok/s</span></div></td>
+          <td class="score-cell amd-col"><div class="score-bar-wrap"><span class="rating r-amd2">Strong</span><div class="score-bar"><div class="score-fill" style="width:52%;background:var(--mi350x)"></div></div><span class="score-sub">~8.5K tok/s est.</span></div></td>
+          <td class="score-cell amd-col"><div class="score-bar-wrap"><span class="rating r-amd3">Strong</span><div class="score-bar"><div class="score-fill" style="width:60%;background:var(--mi355x)"></div></div><span class="score-sub">~10K tok/s est.</span></div></td>
+        </tr>
+
+        <tr data-cat="tokenization">
+          <td class="benchmark-name">KV Cache Capacity <span class="tag">VRAM-bound</span></td>
+          <td class="workload-desc">Concurrent context slots in VRAM — long-form clinical study protocol analysis, full ICH M4E Common Technical Document in single pass, extended regulatory dialogue</td>
+          <td class="metric-col">Concurrent 128K ctx slots</td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-baseline">Baseline</span><div class="score-bar"><div class="score-fill" style="width:22%;background:var(--h200)"></div></div><span class="score-sub">~3 slots (141GB)</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-capable">Capable</span><div class="score-bar"><div class="score-fill" style="width:36%;background:var(--b100)"></div></div><span class="score-sub">~5 slots (192GB)</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-capable">Capable</span><div class="score-bar"><div class="score-fill" style="width:36%;background:var(--b200)"></div></div><span class="score-sub">~5 slots (192GB)</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-strong">Strong</span><div class="score-bar"><div class="score-fill" style="width:58%;background:var(--b300)"></div></div><span class="score-sub">~8 slots (288GB)</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-best">Best</span><div class="score-bar"><div class="score-fill" style="width:96%;background:var(--gb200)"></div></div><span class="score-sub">360+ slots (NVL72)</span></div></td>
+          <td class="score-cell nv-col gb300-last"><div class="score-bar-wrap"><span class="rating r-best">Best+</span><div class="score-bar"><div class="score-fill" style="width:99%;background:var(--gb300)"></div></div><span class="score-sub">600+ slots (NVL72)</span></div></td>
+          <td class="score-cell amd-col amd-first"><div class="score-bar-wrap"><span class="rating r-amd">Capable</span><div class="score-bar"><div class="score-fill" style="width:36%;background:var(--mi300x)"></div></div><span class="score-sub">~5 slots (192GB)</span></div></td>
+          <td class="score-cell amd-col"><div class="score-bar-wrap"><span class="rating r-amd2">Strong</span><div class="score-bar"><div class="score-fill" style="width:58%;background:var(--mi350x)"></div></div><span class="score-sub">~8 slots (288GB)</span></div></td>
+          <td class="score-cell amd-col"><div class="score-bar-wrap"><span class="rating r-amd3">Strong</span><div class="score-bar"><div class="score-fill" style="width:58%;background:var(--mi355x)"></div></div><span class="score-sub">~8 slots (288GB)</span></div></td>
+        </tr>
+
+        <tr data-cat="tokenization">
+          <td class="benchmark-name">Time-to-First-Token <span class="tag">Latency</span></td>
+          <td class="workload-desc">Prefill latency for 4K prompt — real-time clinical decision support query response, pharmacovigilance signal triage, investigator-facing regulatory Q&amp;A</td>
+          <td class="metric-col">ms TTFT (4K prompt, 70B)</td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-capable">Capable</span><div class="score-bar"><div class="score-fill" style="width:55%;background:var(--h200)"></div></div><span class="score-sub">~220ms</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-strong">Strong</span><div class="score-bar"><div class="score-fill" style="width:68%;background:var(--b100)"></div></div><span class="score-sub">~140ms</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-strong">Strong</span><div class="score-bar"><div class="score-fill" style="width:75%;background:var(--b200)"></div></div><span class="score-sub">~110ms</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-best">Best</span><div class="score-bar"><div class="score-fill" style="width:88%;background:var(--b300)"></div></div><span class="score-sub">~75ms est.</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-best">Best</span><div class="score-bar"><div class="score-fill" style="width:92%;background:var(--gb200)"></div></div><span class="score-sub">~60ms</span></div></td>
+          <td class="score-cell nv-col gb300-last"><div class="score-bar-wrap"><span class="rating r-best">Best+</span><div class="score-bar"><div class="score-fill" style="width:99%;background:var(--gb300)"></div></div><span class="score-sub">~40ms est.</span></div></td>
+          <td class="score-cell amd-col amd-first"><div class="score-bar-wrap"><span class="rating r-amd">Capable</span><div class="score-bar"><div class="score-fill" style="width:48%;background:var(--mi300x)"></div></div><span class="score-sub">~180ms</span></div></td>
+          <td class="score-cell amd-col"><div class="score-bar-wrap"><span class="rating r-amd2">Strong</span><div class="score-bar"><div class="score-fill" style="width:64%;background:var(--mi350x)"></div></div><span class="score-sub">~125ms est.</span></div></td>
+          <td class="score-cell amd-col"><div class="score-bar-wrap"><span class="rating r-amd3">Strong</span><div class="score-bar"><div class="score-fill" style="width:70%;background:var(--mi355x)"></div></div><span class="score-sub">~105ms est.</span></div></td>
+        </tr>
+
+        <tr data-cat="tokenization">
+          <td class="benchmark-name">Max Context Length <span class="tag">In-GPU</span></td>
+          <td class="workload-desc">Longest document processable in-VRAM without paging — full CTD Module 2.7 clinical summary, complete IMPD, entire Phase 3 trial protocol in single pass Q&amp;A</td>
+          <td class="metric-col">Max context tokens (70B, FP8)</td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-capable">Capable</span><div class="score-bar"><div class="score-fill" style="width:30%;background:var(--h200)"></div></div><span class="score-sub">~96K tokens</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-strong">Strong</span><div class="score-bar"><div class="score-fill" style="width:48%;background:var(--b100)"></div></div><span class="score-sub">~160K tokens</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-strong">Strong</span><div class="score-bar"><div class="score-fill" style="width:48%;background:var(--b200)"></div></div><span class="score-sub">~160K tokens</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-best">Best</span><div class="score-bar"><div class="score-fill" style="width:72%;background:var(--b300)"></div></div><span class="score-sub">~280K tokens est.</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-best">Best</span><div class="score-bar"><div class="score-fill" style="width:94%;background:var(--gb200)"></div></div><span class="score-sub">1M+ tokens (NVL72)</span></div></td>
+          <td class="score-cell nv-col gb300-last"><div class="score-bar-wrap"><span class="rating r-best">Best+</span><div class="score-bar"><div class="score-fill" style="width:99%;background:var(--gb300)"></div></div><span class="score-sub">2M+ tokens (NVL72)</span></div></td>
+          <td class="score-cell amd-col amd-first"><div class="score-bar-wrap"><span class="rating r-amd">Capable</span><div class="score-bar"><div class="score-fill" style="width:48%;background:var(--mi300x)"></div></div><span class="score-sub">~160K tokens</span></div></td>
+          <td class="score-cell amd-col"><div class="score-bar-wrap"><span class="rating r-amd2">Strong</span><div class="score-bar"><div class="score-fill" style="width:72%;background:var(--mi350x)"></div></div><span class="score-sub">~280K tokens est.</span></div></td>
+          <td class="score-cell amd-col"><div class="score-bar-wrap"><span class="rating r-amd3">Strong</span><div class="score-bar"><div class="score-fill" style="width:72%;background:var(--mi355x)"></div></div><span class="score-sub">~280K tokens est.</span></div></td>
+        </tr>
+
+        <tr data-cat="tokenization">
+          <td class="benchmark-name">FP8 Quantised Throughput</td>
+          <td class="workload-desc">Inference throughput at INT8/FP8 precision — cost-optimised clinical text batch processing, overnight pharmacovigilance literature review, EHR NLP pipeline scaling</td>
+          <td class="metric-col">Throughput uplift vs FP16</td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-limited">N/A</span><div class="score-bar"><div class="score-fill" style="width:10%;background:var(--warn)"></div></div><span class="score-sub">No FP8 (H200)</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-strong">Strong</span><div class="score-bar"><div class="score-fill" style="width:70%;background:var(--b100)"></div></div><span class="score-sub">~1.8× vs FP16</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-strong">Strong</span><div class="score-bar"><div class="score-fill" style="width:76%;background:var(--b200)"></div></div><span class="score-sub">~1.9× vs FP16</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-best">Best</span><div class="score-bar"><div class="score-fill" style="width:88%;background:var(--b300)"></div></div><span class="score-sub">~2.1× vs FP16 est.</span></div></td>
+          <td class="score-cell nv-col"><div class="score-bar-wrap"><span class="rating r-best">Best</span><div class="score-bar"><div class="score-fill" style="width:92%;background:var(--gb200)"></div></div><span class="score-sub">~2.2× vs FP16</span></div></td>
+          <td class="score-cell nv-col gb300-last"><div class="score-bar-wrap"><span class="rating r-best">Best+</span><div class="score-bar"><div class="score-fill" style="width:99%;background:var(--gb300)"></div></div><span class="score-sub">~2.4× vs FP16 est.</span></div></td>
+          <td class="score-cell amd-col amd-first"><div class="score-bar-wrap"><span class="rating r-limited">Limited</span><div class="score-bar"><div class="score-fill" style="width:22%;background:var(--warn)"></div></div><span class="score-sub">FP8 partial support</span></div></td>
+          <td class="score-cell amd-col"><div class="score-bar-wrap"><span class="rating r-amd2">Strong</span><div class="score-bar"><div class="score-fill" style="width:66%;background:var(--mi350x)"></div></div><span class="score-sub">~1.7× est.</span></div></td>
+          <td class="score-cell amd-col"><div class="score-bar-wrap"><span class="rating r-amd3">Strong</span><div class="score-bar"><div class="score-fill" style="width:72%;background:var(--mi355x)"></div></div><span class="score-sub">~1.8× est.</span></div></td>
+        </tr>
+
+      </tbody>
+    </table>
+  </div>
+
+  <!-- VERDICTS -->
+  <div class="section-title">Platform Verdicts</div>
+
+  <div class="cards-vendor-group">
+    <div class="cards-vendor-label nv-label">▌ NVIDIA — Hopper &amp; Blackwell</div>
+    <div class="summary-grid">
+      <div class="summary-card card-h200">
+        <div class="card-gpu-label">H200 SXM5</div>
+        <div class="card-spec">141GB HBM3e · 4.8TB/s · 67 TFLOPS FP64 · NVLink 4</div>
+        <div class="card-reg"><span class="reg-tag rt-gxp">GxP</span><span class="reg-tag rt-21cfr">21 CFR Pt 11</span><span class="reg-tag rt-hipaa">HIPAA</span></div>
+        <ul class="card-strengths">
+          <li>Proven regulatory baseline — validated in GxP, 21 CFR Part 11, HIPAA environments</li>
+          <li>Optimal for existing FP64 Cryo-EM and structural biology HPC pipelines</li>
+          <li>Most cost-effective for pure GROMACS / AMBER molecular dynamics batch workloads</li>
+          <li>Low integration risk for existing CUDA-based bioinformatics stacks</li>
+        </ul>
+        <div class="card-verdict"><strong>Verdict:</strong> Right-size for institutions not yet scaling to 70B+ clinical LLM inference. Stable, auditable platform for MD simulation and genomics processing.</div>
+      </div>
+      <div class="summary-card card-b100">
+        <div class="card-gpu-label">B100 SXM</div>
+        <div class="card-spec">192GB HBM3e · 8TB/s · 90 TFLOPS FP64 · NVLink 5</div>
+        <div class="card-reg"><span class="reg-tag rt-gxp">GxP</span><span class="reg-tag rt-21cfr">21 CFR Pt 11</span><span class="reg-tag rt-ema">EMA</span></div>
+        <ul class="card-strengths">
+          <li>1.7× H200 memory bandwidth — strong uplift for GROMACS multi-system MD and Cryo-EM</li>
+          <li>NVLink 5 doubles peer bandwidth vs H200 — better for multi-GPU protein folding</li>
+          <li>Natural H100/H200 cluster refresh — no CUDA code changes for existing pipelines</li>
+        </ul>
+        <div class="card-verdict"><strong>Verdict:</strong> Ideal evolutionary upgrade for pharma HPC on H100/H200. Best TCO for mixed MD simulation + imaging inference without full Blackwell capex.</div>
+      </div>
+      <div class="summary-card card-b200">
+        <div class="card-gpu-label">B200 SXM</div>
+        <div class="card-spec">192GB HBM3e · 8TB/s · 112 TFLOPS FP64 · 2.25 PF BF16 · FP8</div>
+        <div class="card-reg"><span class="reg-tag rt-gxp">GxP</span><span class="reg-tag rt-21cfr">21 CFR Pt 11</span><span class="reg-tag rt-fda">FDA SaMD</span></div>
+        <ul class="card-strengths">
+          <li>Highest single-GPU FP64 in standard Blackwell — HPC sweet spot for molecular simulation</li>
+          <li>FP8 Transformer Engine enables 70B BioMedLM / clinical NLP at production throughput</li>
+          <li>Structured sparsity for accelerating genomic classification and imaging AI models</li>
+        </ul>
+        <div class="card-verdict"><strong>Verdict:</strong> The 2025-2026 single-GPU sweet spot — balances HPC FP64 depth and clinical AI inference breadth without NVL72 rack commitment.</div>
+      </div>
+      <div class="summary-card card-b300">
+        <div class="card-gpu-label">B300 SXM</div>
+        <div class="card-spec">288GB HBM3e · 16TB/s · ~140 TFLOPS FP64 est. · ~2.8 PF BF16 est.</div>
+        <div class="card-reg"><span class="reg-tag rt-gxp">GxP</span><span class="reg-tag rt-ema">EMA</span><span class="reg-tag rt-ich">ICH E6</span></div>
+        <ul class="card-strengths">
+          <li>288GB VRAM + 16TB/s — eliminates GROMACS memory bottleneck for large biomolecular systems</li>
+          <li>Estimated best single-GPU for STREAM-bound genomic data processing pipelines</li>
+          <li>~2× B200 on memory bandwidth — full Parabricks WGS pipeline fits in-GPU without spill</li>
+        </ul>
+        <div class="card-verdict"><strong>Verdict:</strong> Best single-server option for institutions needing GB300 memory without full NVL72 capex. <span style="color:#b54200">Pre-GA — estimates only.</span></div>
+      </div>
+      <div class="summary-card card-gb200">
+        <div class="card-gpu-label">GB200 NVL72</div>
+        <div class="card-spec">192GB · 8TB/s/GPU · 2.5 PF BF16 (rack) · NVLink 5 · 130TB/s fabric</div>
+        <div class="card-reg"><span class="reg-tag rt-gxp">GxP</span><span class="reg-tag rt-fda">FDA SaMD</span><span class="reg-tag rt-ema">EMA</span></div>
+        <ul class="card-strengths">
+          <li>NVL72 rack as single GPU abstraction — full protein language model and clinical LLM in-rack</li>
+          <li>Real-time Parabricks WGS throughput at 28+ samples/hr makes rapid diagnostic pipelines viable</li>
+          <li>Transformative for multi-omics AI — consolidate genomics, imaging, and NLP onto one fabric</li>
+        </ul>
+        <div class="card-verdict"><strong>Verdict:</strong> Pharma / large hospital system inflection point. Justify capex by consolidating MD simulation, imaging AI, and regulatory NLP onto one fabric.</div>
+      </div>
+      <div class="summary-card card-gb300">
+        <div class="card-gpu-label">GB300 NVL72</div>
+        <div class="card-spec">288GB · 16TB/s/GPU · ~4 PF BF16 (rack) est. · ~200TB/s fabric est.</div>
+        <div class="card-reg"><span class="reg-tag rt-gxp">GxP</span><span class="reg-tag rt-fda">FDA SaMD</span><span class="reg-tag rt-ich">ICH E8</span></div>
+        <ul class="card-strengths">
+          <li>288GB × 72 GPUs = 20TB+ in-rack VRAM — all next-gen life science foundation models covered</li>
+          <li>16TB/s/GPU eliminates every memory bottleneck in pharma HPC and clinical AI</li>
+          <li>Full-scale multi-modal clinical AI (imaging + genomics + EHR NLP) in a single rack</li>
+        </ul>
+        <div class="card-verdict"><strong>Verdict:</strong> Sovereign pharma / tier-1 hospital future platform. Justify with multi-workload consolidation. <span style="color:#b54200">Pre-GA — estimates only.</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cards-vendor-group">
+    <div class="cards-vendor-label amd-label">▌ AMD — Instinct MI Series</div>
+    <div class="summary-grid">
+      <div class="summary-card card-mi300x">
+        <div class="card-gpu-label">MI300X</div>
+        <div class="card-spec">192GB HBM3 · 5.3TB/s · 84 TFLOPS FP64 · 1.3 PF BF16 · Infinity Fabric v3</div>
+        <ul class="card-strengths">
+          <li>Largest VRAM at launch — drove early BioNeMo and protein LLM inference adoption</li>
+          <li>Competitive FP64 vs H200 — viable for molecular dynamics and structural biology HPC</li>
+          <li>Open ROCm/HIP stack — attractive for academic medical centres and open-source bioinformatics</li>
+          <li>Deployed at scale by major hyperscalers — production-proven for cloud-based pharma pipelines</li>
+        </ul>
+        <div class="card-verdict"><strong>Verdict:</strong> Credible H200 alternative. Best AMD case is large-batch genomics inference (VRAM headroom) and open-stack GxP model validation environments.</div>
+      </div>
+      <div class="summary-card card-mi350x">
+        <div class="card-gpu-label">MI350X</div>
+        <div class="card-spec">288GB HBM3e · ~8TB/s · ~108 TFLOPS FP64 est. · ~1.8 PF BF16 est.</div>
+        <ul class="card-strengths">
+          <li>288GB matches B300/GB200 — AMD's direct Blackwell memory response for large MD systems</li>
+          <li>~1.6× MI300X bandwidth uplift — strong for large-scale GROMACS and Cryo-EM pipelines</li>
+          <li>FP8 support expected — imaging AI and clinical NLP inference competitiveness improves</li>
+        </ul>
+        <div class="card-verdict"><strong>Verdict:</strong> Compelling for multi-vendor diversification. Especially relevant where open-source ROCm bioinformatics stacks are preferred. <span style="color:#b54200">Pre-GA.</span></div>
+      </div>
+      <div class="summary-card card-mi355x">
+        <div class="card-gpu-label">MI355X</div>
+        <div class="card-spec">288GB HBM3e · ~8TB/s · ~116 TFLOPS FP64 est. · ~2.0 PF BF16 est.</div>
+        <ul class="card-strengths">
+          <li>AMD flagship — ~2 PF BF16 approaches B200 inference territory for clinical NLP workloads</li>
+          <li>Optimised inference efficiency at lower TDP — favourable for green data centre mandates</li>
+          <li>Infinity Fabric v4 improvements address multi-GPU scale-out for multi-omics training</li>
+        </ul>
+        <div class="card-verdict"><strong>Verdict:</strong> AMD's top life science GPU. Best for vendor-diverse estates, academic HPC, or non-NVIDIA inference at scale. <span style="color:#b54200">Pre-GA estimates.</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title">Tokenization &amp; Throughput — Platform Verdicts (Clinical &amp; Scientific NLP)</div>
+
+  <div class="cards-vendor-group">
+    <div class="cards-vendor-label nv-label">▌ NVIDIA — Tokenization Highlights</div>
+    <div class="summary-grid">
+      <div class="summary-card card-h200">
+        <div class="card-gpu-label">H200 SXM5</div>
+        <div class="card-spec">141GB · No FP8 · ~18K prefill tok/s · ~96K max ctx (70B)</div>
+        <ul class="card-strengths">
+          <li>Sufficient for batch overnight regulatory NLP and medical writing assistance — not for real-time clinical decision support at scale</li>
+          <li>No FP8 Transformer Engine — highest per-token compute cost in NVIDIA range</li>
+          <li>96K context handles most individual CSRs and ICH guideline documents</li>
+        </ul>
+        <div class="card-verdict"><strong>Tokenization Verdict:</strong> Viable for non-latency-sensitive clinical NLP. Upgrade path to Blackwell required for high-concurrency or long-context pharma workloads.</div>
+      </div>
+      <div class="summary-card card-b200">
+        <div class="card-gpu-label">B200 SXM</div>
+        <div class="card-spec">FP8 TE · ~45K prefill tok/s · ~1.9× FP16 throughput · 160K ctx</div>
+        <ul class="card-strengths">
+          <li>FP8 Transformer Engine: ~1.9× throughput uplift vs FP16 — best single-GPU TCO for clinical NLP and pharmacovigilance</li>
+          <li>160K context covers full Phase 3 protocols and ICH M4E CTD Module 2.7 clinical summaries in one pass</li>
+          <li>~115 tok/s single-user decode — real-time investigator-facing regulatory Q&amp;A is viable</li>
+        </ul>
+        <div class="card-verdict"><strong>Tokenization Verdict:</strong> 2025-2026 sweet spot for clinical and scientific NLP. FP8 efficiency + context headroom suits regulatory submission automation and medical RAG pipelines.</div>
+      </div>
+      <div class="summary-card card-gb200">
+        <div class="card-gpu-label">GB200 NVL72</div>
+        <div class="card-spec">NVL72 fabric · 1M+ token ctx · 360+ concurrent slots · ~82K prefill tok/s</div>
+        <ul class="card-strengths">
+          <li>1M+ token context enables full-dossier regulatory corpus analysis — entire NDA/MAA as a single prompt</li>
+          <li>360+ concurrent 128K sessions — entire clinical operations and regulatory affairs teams in parallel</li>
+          <li>NVL72 unified memory eliminates KV cache spill — latency fully deterministic for real-time clinical AI</li>
+        </ul>
+        <div class="card-verdict"><strong>Tokenization Verdict:</strong> Transformative for large pharma and integrated health systems. Consolidate all LLM tokenization workloads — clinical NLP, RAG, fine-tuning — onto single NVL72 fabric.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cards-vendor-group">
+    <div class="cards-vendor-label amd-label">▌ AMD — Tokenization Highlights</div>
+    <div class="summary-grid">
+      <div class="summary-card card-mi300x">
+        <div class="card-gpu-label">MI300X</div>
+        <div class="card-spec">192GB HBM3 · Partial FP8 · ~22K prefill tok/s · 160K ctx</div>
+        <ul class="card-strengths">
+          <li>192GB VRAM: large KV cache advantage — first GPU to run BioMedLM-70B fully in-GPU at launch</li>
+          <li>Competitive prefill vs H200 — strong for document-heavy batch clinical NLP workloads</li>
+          <li>ROCm/vLLM stack matures rapidly — viable for open-source pharmacovigilance and regulatory toolchains</li>
+        </ul>
+        <div class="card-verdict"><strong>Tokenization Verdict:</strong> Credible H200 alternative for long-context batch clinical NLP. FP8 gap limits peak throughput vs Blackwell — best in open-stack academic or NHS/public health environments.</div>
+      </div>
+      <div class="summary-card card-mi355x">
+        <div class="card-gpu-label">MI355X</div>
+        <div class="card-spec">288GB HBM3e · FP8 support · ~46K prefill tok/s est. · 280K ctx est.</div>
+        <ul class="card-strengths">
+          <li>288GB VRAM — matches B300 context capacity, competitive 280K token window for large clinical documents</li>
+          <li>FP8 throughput estimated at ~1.8×: approaches B200 efficiency for clinical inference workloads</li>
+          <li>Lower TDP profile — favourable for energy-cost-sensitive hospital data centres and green pharma mandates</li>
+        </ul>
+        <div class="card-verdict"><strong>Tokenization Verdict:</strong> AMD's strongest clinical NLP platform. Pre-GA estimates — validate FP8 maturity in ROCm stack before committing to production regulatory NLP pipelines. <span style="color:#b54200">Est. only.</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footnote">
+    <strong>Tokenization data notes:</strong> Prefill and decode throughput figures for Llama3-70B at FP16/BF16 (or FP8 where noted) derived from published vLLM benchmarks, TensorRT-LLM benchmarks, MLPerf Inference v4 server results, and NVIDIA/AMD product disclosures. KV cache slot estimates assume 128K context window with KV cache in BF16 at 70B parameter model (approx. 16GB per 128K slot at BF16). Max context estimates assume full KV in-VRAM without offloading. TTFT estimates for 4K token prompt on a single GPU without tensor parallelism. <strong style="color:#b54200">⚠ B300, GB300, MI350X, MI355X tokenization figures are architectural projections — not independently validated.</strong> FP8 throughput multipliers are indicative; real-world uplift depends on model architecture, quantisation quality, and serving framework maturity (TRT-LLM vs vLLM vs ROCm). AMD FP8 support on MI300X is partial via ROCm; MI350X/MI355X FP8 support assumed full but unconfirmed.
+  </div>
+
+  <div class="footnote">
+    <strong>Data sourcing &amp; caveats (benchmark matrix):</strong> NVIDIA H200, B100, B200, GB200 figures from published NVIDIA whitepapers, MLCommons MLPerf v4 results, GTC 2024/2025 announcements, and NVIDIA product briefs. AMD MI300X from AMD product brief and published MLPerf submissions. GROMACS, NAMD, AMBER performance estimates derived from published GPU performance papers and NVIDIA HPC benchmarks. Parabricks WGS throughput from NVIDIA Clara Parabricks published benchmarks on H100/H200 with linear scaling projection. <strong style="color:#b54200">⚠ B300, GB300, MI350X, MI355X figures are architectural projections (marked est.) — not yet validated in independent third-party benchmarks.</strong> Relative multipliers (×H200) are indicative for workload planning and not a substitute for PoC testing. Parabricks is NVIDIA-only — AMD figures reflect ROCm-native GATK-GPU performance projections only. Regulatory overlay is informational; compliance requirements should be validated with regulatory affairs, quality assurance, and legal teams. Prepared by WWT Global Engineering for client planning purposes.
+  </div>
+
+</div>
+
+<script>
+  let activeCat = 'all';
+  let showNV = true;
+  let showAMD = true;
+
+  function applyFilters() {
+    document.querySelectorAll('tbody tr[data-cat]').forEach(r => {
+      r.classList.toggle('hidden', activeCat !== 'all' && r.dataset.cat !== activeCat);
+    });
+    document.querySelectorAll('tbody tr.section-header').forEach(s => {
+      s.classList.toggle('hidden', activeCat !== 'all');
+    });
+    document.querySelectorAll('.nv-col').forEach(el => { el.style.display = showNV ? '' : 'none'; });
+    document.querySelectorAll('.amd-col').forEach(el => { el.style.display = showAMD ? '' : 'none'; });
+  }
+
+  function filterRows(cat, btn) {
+    activeCat = cat;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    applyFilters();
+  }
+
+  function toggleVendor(vendor) {
+    if (vendor === 'nv') { showNV = !showNV; document.getElementById('nvToggle').classList.toggle('nv-active', showNV); }
+    else { showAMD = !showAMD; document.getElementById('amdToggle').classList.toggle('amd-active', showAMD); }
+    applyFilters();
+  }
+
+  window.addEventListener('load', () => {
+    document.querySelectorAll('.score-fill').forEach(bar => {
+      const w = bar.style.width; bar.style.width = '0';
+      setTimeout(() => { bar.style.width = w; }, 280);
+    });
+  });
+</script>
+</body>
+</html>
